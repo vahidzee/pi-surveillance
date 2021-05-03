@@ -1,11 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from . import models
+from . import forms
 
 
 # Register your models here.
 class FilterUserAdmin(admin.ModelAdmin):
-    exclude = ['user']
 
     def save_model(self, request, obj, form, change):
         obj.user = request.user
@@ -17,14 +17,19 @@ class FilterUserAdmin(admin.ModelAdmin):
 
     def has_change_permission(self, request, obj=None):
         if not obj:
-            # the changelist itself
             return True
         return obj.user == request.user
 
 
 @admin.register(models.Device)
 class DeviceAdmin(FilterUserAdmin):
+    form = forms.DeviceForm
     list_display = ['id', 'name']
+
+    def save_model(self, request, obj, form, change):
+        obj = models.Device.objects.get(id=obj.id)
+        obj.user = request.user
+        obj.save()
 
 
 admin.site.site_header = "Surveillance Manager"

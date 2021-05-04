@@ -19,7 +19,8 @@ def signup(request):
             return redirect('../admin/')
     else:
         form = forms.UserCreationForm()
-    return render(request, 'admin/logon.html', {'form': form, 'site_header': admin.site.site_header})
+    return render(request, 'admin/logon.html',
+                  {'form': form, 'site_header': admin.site.site_header, 'site_title': admin.site.site_title})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -69,7 +70,7 @@ def authenticate_device(funct):
             auth_res = dict(user=access_token.device.user, device=access_token.device)
         except KeyError:
             return JsonResponse(data=utils.base_response(message='No `token` was specified.', ok=False))
-        except models.models.ObjectDoesNotExist:
+        except (models.models.ObjectDoesNotExist, Exception):
             return JsonResponse(data=utils.base_response(message='Invalid `token` was specified.', ok=False))
         return funct(request, *args, data=data, file=file, auth_res=auth_res, **kwargs)
 
@@ -86,3 +87,34 @@ def fetch(request, data: dict = None, file=None, auth_res=None):
             ])
         )
     )
+
+
+@authenticate_device
+def introduce(request, data: dict = None, file=None, auth_res=None):
+    try:
+        embedding = data['embedding']
+        embedding = json.loads(embedding if not isinstance(embedding, list) else embedding[0])
+        image = Image.open(file).convert('RGB')
+        face = recognition.find_face(auth_res['user'], image=image, embedding=embedding)
+        if isinstance(face, bool):
+            face = models.Face.save_pil(user=auth_res['user'], image=image, embedding=embedding)
+        return JsonResponse(data=utils.base_response(response=dict(face_id=face.id)))
+    except KeyError:
+        return JsonResponse(data=utils.base_response(message='Embedding was not mentioned', ok=False))
+
+
+@authenticate_device
+def log(request, data: dict = None, file=None, auth_res=None):
+    try:
+        face_id = data['face_id'] if not isinstance(data['face_id'], list) else data['face_id'][0]
+        face = models.Face.objects.get(id=face_id)
+        kind = data['kind'] if not isinstance(data['kind'], list) else data['kind'][0]
+        device = auth_res['device']
+        image = Image.open(file).convert('RGB') if file is not None else None
+        models.Log.save_pil(face=face, device=device, kind=kind, image=image)
+        return JsonResponse(data=utils.base_response(ok=True, message='Logged successfully'))
+    except KeyError:
+        return JsonResponse(
+            data=utils.base_response(message='Both `face_id` and `kind` are expected to be specified', ok=False))
+    except (models.models.ObjectDoesNotExist,):
+        return JsonResponse(data=utils.base_response(message='Invalid `face_id` is specified', ok=False))

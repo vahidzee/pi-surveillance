@@ -68,7 +68,7 @@ class FaceAdmin(FilterUserAdmin):
 @admin.register(models.Log)
 class LogAdmin(admin.ModelAdmin):
     list_display = ['face_name', 'device_name', 'time', 'kind', 'picture']
-    search_fields = ['face_name']
+    search_fields = ['device__id', 'device__name', 'face__name', 'face__id']
     list_filter = ['kind', ]
     list_display_links = None
     actions = None
@@ -90,5 +90,8 @@ class LogAdmin(admin.ModelAdmin):
 
 
 admin.site.site_header = "Surveillance Manager"
+admin.site.site_title = "Surveillance"
+admin.site.index_title = "Manage"
+admin.site.enable_nav_sidebar = False
 admin.site.unregister(User)
 admin.site.unregister(Group)

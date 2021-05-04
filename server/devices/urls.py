@@ -8,4 +8,5 @@ urlpatterns = [
     path('hello/', views.hello),
     path('introduce/', views.introduce),
     path('fetch/', views.fetch),
+    path('log/', views.log)
 ]

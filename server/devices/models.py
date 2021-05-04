@@ -58,8 +58,7 @@ class AccessToken(models.Model):
 def picture_path(instance, filename):
     base_dir = f'faces/{instance.user}' if isinstance(
         instance, Face) else f'logs/{instance.device.id}/{instance.face.id}'
-    filename = f"{instance.id}-{filename.strip().replace(' ', '_')}" if isinstance(
-        instance, Face) else f'{instance.time}.{filename.split(".")[-1]}'
+    filename = f"{instance.id}" if isinstance(instance, Face) else f'{instance.time}'
     return f'{base_dir}/{filename}'
 
 
@@ -88,7 +87,6 @@ class Face(models.Model):
 
     @staticmethod
     def save_pil(user, image: Image, embedding=None, name=None):
-        print(user, image)
         if embedding is not None and hasattr(embedding, 'tolist'):
             embedding = json.dumps(embedding.tolist())
         instance = Face(user=user, embedding=embedding, name=name)
@@ -133,3 +131,15 @@ class Log(models.Model):
             res = f'<img src="{self.image.url}" width="50vw">'
             return format_html(res)
         return self.face.picture()
+
+    @staticmethod
+    def save_pil(face, device, kind, image=None):
+        instance = Log(face=face, device=device, kind=kind)
+        if image is not None:
+            stream = BytesIO()
+            try:
+                image.save(stream, format='png')
+                instance.image.save(instance.image.name, ContentFile(stream.getvalue()))
+            finally:
+                stream.close()
+        instance.save()

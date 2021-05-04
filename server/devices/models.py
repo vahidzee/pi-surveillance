@@ -1,8 +1,13 @@
+import json
+
+from PIL import Image
 from django.db import models
 from django.contrib.auth.models import User
 import uuid
 from django.utils.html import format_html
 from . import utils
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 
 # Create your models here.
@@ -50,7 +55,7 @@ def picture_path(instance, filename):
 class Face(models.Model):
     user = models.ForeignKey(to=User, on_delete=models.CASCADE, blank=False, null=False)
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
-    name = models.CharField(max_length=80, blank=True, help_text='Custom name for surveilled face')
+    name = models.CharField(max_length=80, blank=True, help_text='Custom name for surveilled face', null=True)
     image = models.ImageField(upload_to=picture_path, blank=False)
     embedding = models.TextField(blank=True, null=True)
 
@@ -68,7 +73,21 @@ class Face(models.Model):
         return f'{dict(Log.kind_choices)[last_log.kind]} {last_log.device_name()} {utils.time_passed(last_log.time)}'
 
     def __str__(self):
-        return f'Face(name="{self.name}")'
+        return f'Face(name="{self.name if self.name else self.id}")'
+
+    @staticmethod
+    def save_pil(user, image: Image, embedding=None, name=None):
+        print(user, image)
+        if embedding is not None and hasattr(embedding, 'tolist'):
+            embedding = json.dumps(embedding.tolist())
+        instance = Face(user=user, embedding=embedding, name=name)
+        stream = BytesIO()
+        try:
+            image.save(stream, format='png')
+            instance.image.save(instance.image.name, ContentFile(stream.getvalue()))
+        finally:
+            stream.close()
+        instance.save()
 
 
 class Log(models.Model):

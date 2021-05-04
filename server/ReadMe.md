@@ -6,7 +6,7 @@ on [django-admin](https://docs.djangoproject.com/en/3.2/ref/contrib/admin/).
 ## Table of contents
 
 * [Functionality](#functionality)
-    * [API](#api-description)
+    * [APIs](#apis-description)
 * [Requirements](#requirements)
 
 ## Functionality
@@ -16,7 +16,7 @@ management website provides basic functionality to track and manage a number of 
 of new people to be tracked, and provide overall statistics of the intermittent logs send from face-detection units
 owned by each user.
 
-### API Description
+### APIs Description
 
 All correspondence is done with JSON HTTP Requests. The following is a list of utilized API endpoints and a short
 description of their functionalities:
@@ -29,9 +29,9 @@ description of their functionalities:
   since its creation. Devices should renounce their presence through **hello** once their `access_token` has been
   invalidated.
 
-  It is important to note that when a new face is observed, first the device would **introduce** it to central
-  management receiving its corresponding `face_id` in response. Then the respective log is sent through a **log** API
-  call.
+  It should be mentioned that until the device is not claimed by a user through the UI of the management system, No
+  access token is provided to the newly connected device and the error message _Device is yet to be claimed by a user_
+  will be returned.
 
 ## Requirements
 

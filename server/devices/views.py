@@ -33,6 +33,8 @@ def hello(request) -> JsonResponse:
             # registering newly connected device (waiting for user to claim)
             device = models.Device(id=data['device_id'])
             device.save()
+        if not device.user:
+            return JsonResponse(data=utils.base_response(ok=False, description='Device is yet to be claimed by a user'))
         tokens = models.AccessToken.objects.filter(device=device)
         if tokens.count():
             # request for new token -> invalidate old token

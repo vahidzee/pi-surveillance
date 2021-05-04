@@ -32,6 +32,7 @@ class DeviceAdmin(FilterUserAdmin):
     list_display = ['id', 'name', 'last_update', 'inside_count']
     list_editable = ['name']
     list_display_links = None
+    search_fields = ['name', 'id']
 
     def save_model(self, request, obj, form, change):
         found_obj = models.Device.objects.get(id=obj.id)
@@ -49,6 +50,7 @@ class FaceAdmin(FilterUserAdmin):
     list_display = ['name', 'picture', 'image', 'last_seen']
     list_display_links = None
     list_editable = ['image', 'name']
+    search_fields = ['name']
 
     def save_model(self, request, obj, form, change):
         obj.user = request.user
@@ -66,6 +68,8 @@ class FaceAdmin(FilterUserAdmin):
 @admin.register(models.Log)
 class LogAdmin(admin.ModelAdmin):
     list_display = ['face_name', 'device_name', 'time', 'kind', 'picture']
+    search_fields = ['face_name']
+    list_filter = ['kind', ]
     list_display_links = None
     actions = None
 

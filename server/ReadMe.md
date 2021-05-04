@@ -28,8 +28,9 @@ updates on the passerby movements and potentially newly observed faces.
 After creating an account (by logging on) and signing in to the platform, three main menus are noticeable:
 
 1. **Devices**: Through this menu users can register new face-detector devices, provide and edit custom names for
-   registered devices (to help with tracking their location & etc.), and follow overall statistics such as _last update_
-   or _number of people inside_ which can be beneficial for many things such as social distancing controlling.
+   registered devices (to provide a better information retrieval experience through the provided search functionality),
+   and follow overall statistics such as _last update_ or _number of people inside_ which can be beneficial for many
+   things such as social distancing controlling.
 
 2. **Faces**: This menu provides the necessary functionality to add and manage the observed faces. Users can add custom
    images of people to be tracked by face-detector devices. If the provided image, is of more than one people, the
@@ -38,10 +39,14 @@ After creating an account (by logging on) and signing in to the platform, three 
    same people.
 
    In addition to the faces that users manually submit, this menu lists all the new faces that user-owned face-detectors
-   will observe overtime. It is possible to add an arbitrary name for each face to help with easier tracking.
+   will observe overtime. It is possible to add an arbitrary name for each face which combined with the provided search
+   functionality ensures an effective information retrieval experience.
 
    Finally, an overall statistic of where the user was last observed is shown to depict each person's most recent
    location.
+
+3. **Logs**: This menu provides a list of all logged observed faces by user-owned face-detector devices and filter and
+   searching functionality to help with the retrieval of desired logs.
 
 ### APIs Description
 
@@ -62,6 +67,27 @@ description of their functionalities:
 
   After the device has successfully acquired a valid access token, it will update its local stack of `face_embeddings`
   by employing the **fetch** API endpoint.
+
+* **fetch**: Using this endpoint client devices can receive a list of the most recent `face_embeddings` required for
+  identifying faces. To bypass the need for a reliable network connection (which can be necessary for continual socket
+  connections) or the need for implementing complicated push notification based communication with face-detectors, each
+  device is in charge of updating its embedding table periodically.
+
+* **introduce**: Upon observation of unknown faces, using this API endpoint face-detector devices upload captured
+  `image`, and `embedding`. The management system cross-checks the received `face_embedding` with users known faces
+  repository. If the face is unrecognized, a new `Face` instance is added to the users known faces list, else, the
+  related face information is fetched. In response, system sends back the `face_id` of either the previously known or
+  the newly created Face instance.
+
+* **log**: Using this API endpoint, devices send updates once they recognize a person passing by. The field `kind`
+  specifies whether the person entered or left the under-surveillance area. The purpose of the `face_id` field is as one
+  can speculate, for stating the identity of the person passing by. Optionally (if the network connection is reliable
+  enough) devices can choose to send the captured image of the incident for further inspection by writing it as a `FILE`
+  field on their HTTP request.
+
+  It is important to note that when a new face is observed, first the device would **introduce** it to central
+  management receiving its corresponding `face_id` in response. Then the respective log is sent through a **log** API
+  call.
 
 ## Requirements
 

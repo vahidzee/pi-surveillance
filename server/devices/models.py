@@ -43,6 +43,17 @@ class AccessToken(models.Model):
     ip = models.GenericIPAddressField(blank=False, null=False)
     valid = models.BooleanField(blank=False, null=False, default=True)
 
+    VALIDITY_DURATION = 1  # hours
+
+    def is_valid(self, request):
+        if not self.valid:
+            return False
+        if utils.time_passed(self.time, return_unformated=True) > self.VALIDITY_DURATION * 3600 \
+                or utils.get_client_ip(request) != self.ip:
+            self.valid = False
+            return False
+        return True
+
 
 def picture_path(instance, filename):
     base_dir = f'faces/{instance.user}' if isinstance(

@@ -14,14 +14,14 @@ on [django-admin](https://docs.djangoproject.com/en/3.2/ref/contrib/admin/).
 
 Assuming that each client unit has the ability to distinguish people entering a property from people leaving it; This
 management website provides basic functionality to track and manage a number of client units, add/remove/change pictures
-of new people to be tracked, and provide overall statistics of the intermittent logs send from face-detection units
+of new people to be tracked, and provide overall statistics of the intermittent logs sent from face-detection units
 owned by each user.
 
 ### Web Application
 
 Through the provided web application user interface, users can sign up and manage their face-detector devices all in a
-single platform. After a face-detector client is connected to the internet, it will automatically contact the central
-management system announcing its livelihood. The owner can then register his/her device by entering the
+single yet simple platform. After a face-detector client is connected to the internet, it will automatically contact the 
+central management system announcing its livelihood. The owner can then register his/her device by entering the
 unique `device_id` which is provided for each device. After than the claimed device will automatically start sending
 updates on the passerby movements and potentially newly observed faces.
 

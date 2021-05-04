@@ -1,5 +1,6 @@
+from PIL import Image
 from django.contrib.auth import login, authenticate
-from . import forms
+from . import forms, recognition
 from . import utils
 from . import models
 from django.shortcuts import render, redirect
@@ -34,7 +35,7 @@ def hello(request) -> JsonResponse:
             device = models.Device(id=data['device_id'])
             device.save()
         if not device.user:
-            return JsonResponse(data=utils.base_response(ok=False, description='Device is yet to be claimed by a user'))
+            return JsonResponse(data=utils.base_response(ok=False, message='Device is yet to be claimed by a user'))
         tokens = models.AccessToken.objects.filter(device=device)
         if tokens.count():
             # request for new token -> invalidate old token
@@ -46,4 +47,42 @@ def hello(request) -> JsonResponse:
         token.save()
         return JsonResponse(data=utils.base_response(response=dict(token=token.token)))
     except KeyError:
-        return JsonResponse(data=utils.base_response(ok=False, description='No `device_id` specified'))
+        return JsonResponse(data=utils.base_response(ok=False, message='No `device_id` specified'))
+
+
+def authenticate_device(funct):
+    @method_decorator(csrf_exempt, name='dispatch')
+    def view_wrapper(request, *args, **kwargs):
+        if request.POST:
+            data = dict(request.POST)
+            file = request.FILES.get('image', None)
+        else:
+            data = json.loads(request.body)
+            file = None
+        try:
+            token = data['token']
+            if isinstance(token, list):
+                token = token[0]
+            access_token = models.AccessToken.objects.get(token=token)
+            if not access_token.is_valid(request):
+                return JsonResponse(data=utils.base_response(message='This token is no longer valid.', ok=False))
+            auth_res = dict(user=access_token.device.user, device=access_token.device)
+        except KeyError:
+            return JsonResponse(data=utils.base_response(message='No `token` was specified.', ok=False))
+        except models.models.ObjectDoesNotExist:
+            return JsonResponse(data=utils.base_response(message='Invalid `token` was specified.', ok=False))
+        return funct(request, *args, data=data, file=file, auth_res=auth_res, **kwargs)
+
+    return view_wrapper
+
+
+@authenticate_device
+def fetch(request, data: dict = None, file=None, auth_res=None):
+    return JsonResponse(
+        data=utils.base_response(
+            response=dict(faces=[
+                dict(embedding=face.embedding, face_id=face.id) for face in
+                models.Face.objects.filter(user=auth_res['user'])
+            ])
+        )
+    )

@@ -23,8 +23,10 @@ def display_time(seconds, granularity=2):
     return ', '.join(result[:granularity])
 
 
-def time_passed(time, granularity=2):
+def time_passed(time, granularity=2, return_unformated=False):
     timediff = datetime.datetime.utcnow().replace(tzinfo=utc) - time
+    if return_unformated:
+        return timediff.total_seconds()
     return display_time(timediff.total_seconds(), granularity=granularity)
 
 
@@ -37,9 +39,9 @@ def get_client_ip(request):
     return ip
 
 
-def base_response(response=None, ok=True, description=''):
+def base_response(response=None, ok=True, message=''):
     """creates base response model of form {ok, description, [response]}"""
-    res = dict(ok=ok, description=description)
+    res = dict(ok=ok, message=message)
     if response is not None:
         res['response'] = response
     return res

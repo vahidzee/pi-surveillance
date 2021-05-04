@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.contrib.auth.models import User, Group
 from . import models
 from . import forms
+from . import recognition
+from PIL import Image
 
 
 # Register your models here.
@@ -42,10 +44,23 @@ class DeviceAdmin(FilterUserAdmin):
 
 @admin.register(models.Face)
 class FaceAdmin(FilterUserAdmin):
+    form = forms.FaceForm
+    exclude = ['user', 'embedding']
     list_display = ['name', 'picture', 'image', 'last_seen']
     list_display_links = None
     list_editable = ['image', 'name']
-    list_select_related = True
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        try:
+            models.Face.objects.get(id=obj.id)
+            obj.save()
+        except models.models.ObjectDoesNotExist:
+            faces = recognition.get_faces(image=Image.open(obj.image))
+            for embedding, face in faces:
+                if isinstance(recognition.find_face(image=face, embedding=embedding, user=request.user), bool):
+                    models.Face.save_pil(user=request.user, image=face, embedding=embedding,
+                                         name=None if len(faces) > 1 else obj.name)
 
 
 @admin.register(models.Log)
@@ -73,4 +88,3 @@ class LogAdmin(admin.ModelAdmin):
 admin.site.site_header = "Surveillance Manager"
 admin.site.unregister(User)
 admin.site.unregister(Group)
-admin.site.register(models.AccessToken)

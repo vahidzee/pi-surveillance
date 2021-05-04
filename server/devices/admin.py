@@ -73,3 +73,4 @@ class LogAdmin(admin.ModelAdmin):
 admin.site.site_header = "Surveillance Manager"
 admin.site.unregister(User)
 admin.site.unregister(Group)
+admin.site.register(models.AccessToken)

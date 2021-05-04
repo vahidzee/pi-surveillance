@@ -31,6 +31,14 @@ class Device(models.Model):
     last_update.long_description = "Time of last log"
 
 
+class AccessToken(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
+    device = models.ForeignKey(to=Device, null=False, blank=False, on_delete=models.CASCADE)
+    time = models.DateTimeField(auto_now_add=True)
+    ip = models.GenericIPAddressField(blank=False, null=False)
+    valid = models.BooleanField(blank=False, null=False, default=True)
+
+
 def picture_path(instance, filename):
     base_dir = f'faces/{instance.user}' if isinstance(
         instance, Face) else f'logs/{instance.device.id}/{instance.face.id}'

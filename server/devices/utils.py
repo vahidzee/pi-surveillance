@@ -26,3 +26,20 @@ def display_time(seconds, granularity=2):
 def time_passed(time, granularity=2):
     timediff = datetime.datetime.utcnow().replace(tzinfo=utc) - time
     return display_time(timediff.total_seconds(), granularity=granularity)
+
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+
+def base_response(response=None, ok=True, description=''):
+    """creates base response model of form {ok, description, [response]}"""
+    res = dict(ok=ok, description=description)
+    if response is not None:
+        res['response'] = response
+    return res

@@ -20,7 +20,7 @@ owned by each user.
 ### Web Application
 
 Through the provided web application user interface, users can sign up and manage their face-detector devices all in a
-single yet simple platform. After a face-detector client is connected to the internet, it will automatically contact the 
+single yet simple platform. After a face-detector client is connected to the internet, it will automatically contact the
 central management system announcing its livelihood. The owner can then register his/her device by entering the
 unique `device_id` which is provided for each device. After than the claimed device will automatically start sending
 updates on the passerby movements and potentially newly observed faces.
@@ -91,5 +91,31 @@ description of their functionalities:
 
 ## Requirements
 
-To run this project you would need `python>=3.8`. To install the dependancies you can run
+To run this project you would need `python>=3.9`. To install the dependencies you can run
 `pip install -r requirements.txt`.
+
+If you wish to try out the project (development-test) follow the steps bellow:
+
+1. Install dependencies:
+
+```shell
+pip3.9 install -r requirements.txt
+```
+
+2. Make migrations (figure out database tables creation commands based on django-orm model):
+
+```shell
+python3.9 manage.py makemigrations 
+```
+
+3. Migrate (initialize database):
+
+```shell
+python3.9 manage.py migrate
+```
+
+4. Run developmental server:
+
+```shell
+python3.9 manage.py runserver
+```

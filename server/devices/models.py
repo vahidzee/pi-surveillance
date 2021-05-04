@@ -97,6 +97,7 @@ class Face(models.Model):
         finally:
             stream.close()
         instance.save()
+        return instance
 
 
 class Log(models.Model):
@@ -143,3 +144,4 @@ class Log(models.Model):
             finally:
                 stream.close()
         instance.save()
+        return instance

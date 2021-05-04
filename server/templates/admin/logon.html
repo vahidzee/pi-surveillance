@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/login.css" %}">
+{{ form.media }}
+{% endblock %}
+
+<!--{% block bodyclass %}{{ block.super }} login{% endblock %}-->
+
+<!--{% block usertools %}{% endblock %}-->
+
+<!--{% block nav-global %}{% endblock %}-->
+
+<!--{% block nav-sidebar %}{% endblock %}-->
+
+<!--{% block content_title %}{% endblock %}-->
+
+<!--{% block breadcrumbs %}{% endblock %}-->
+
+{% block content %}
+{% if form.errors and not form.non_field_errors %}
+<p class="errornote">
+{% if form.errors.items|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="errornote">
+    {{ error }}
+</p>
+{% endfor %}
+{% endif %}
+
+<div id="content-main">
+
+<form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <p>
+        {{ field.label_tag }}<br>
+        {{ field }}
+        <br>
+        {% if field.help_text %}
+          <small style="color: grey">{{ field.help_text }}</small>
+        {% endif %}
+        {% for error in field.errors %}
+          <p style="color: red">{{ error }}</p>
+        {% endfor %}
+        <hr>
+      </p>
+    {% endfor %}
+  <div class="submit-row">
+    <input type="submit" value="{% translate 'Log On' %}">
+    <br><br>
+    Have an account? <a href="/admin" >{% translate 'Log in' %}</a>.
+  </div>
+
+</form>
+
+</div>
+{% endblock %}

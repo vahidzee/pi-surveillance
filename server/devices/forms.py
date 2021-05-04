@@ -2,6 +2,8 @@ from . import models
 from django import forms
 from django.db import models as django_models
 
+from django.contrib.auth.forms import UserCreationForm as AuthUserCreationForm
+
 
 class DeviceForm(forms.ModelForm):
     class Meta:
@@ -17,3 +19,15 @@ class DeviceForm(forms.ModelForm):
         except django_models.ObjectDoesNotExist:
             raise forms.ValidationError("Device has not been connected to server yet")
         return self.cleaned_data
+
+
+class UserCreationForm(AuthUserCreationForm):
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data["password1"])
+        user.is_staff = True
+        user.is_admin = True
+        user.is_superuser = True
+        if commit:
+            user.save()
+        return user

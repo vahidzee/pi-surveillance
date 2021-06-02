@@ -1,4 +1,5 @@
 from PIL import Image
+from django import shortcuts
 from django.contrib.auth import login, authenticate
 from . import forms, recognition
 from . import utils
@@ -44,7 +45,8 @@ def hello(request) -> JsonResponse:
             last_token.valid = False
             last_token.save()
         # create new access token
-        token = models.AccessToken(device=device, ip=utils.get_client_ip(request))
+        token = models.AccessToken(
+            device=device, ip=utils.get_client_ip(request))
         token.save()
         return JsonResponse(data=utils.base_response(response=dict(token=token.token)))
     except KeyError:
@@ -67,7 +69,8 @@ def authenticate_device(funct):
             access_token = models.AccessToken.objects.get(token=token)
             if not access_token.is_valid(request):
                 return JsonResponse(data=utils.base_response(message='This token is no longer valid.', ok=False))
-            auth_res = dict(user=access_token.device.user, device=access_token.device)
+            auth_res = dict(user=access_token.device.user,
+                            device=access_token.device)
         except KeyError:
             return JsonResponse(data=utils.base_response(message='No `token` was specified.', ok=False))
         except (models.models.ObjectDoesNotExist, Exception):
@@ -93,11 +96,14 @@ def fetch(request, data: dict = None, file=None, auth_res=None):
 def introduce(request, data: dict = None, file=None, auth_res=None):
     try:
         embedding = data['embedding']
-        embedding = json.loads(embedding if not isinstance(embedding, list) else embedding[0])
+        embedding = json.loads(embedding if not isinstance(
+            embedding, list) else embedding[0])
         image = Image.open(file).convert('RGB')
-        face = recognition.find_face(auth_res['user'], image=image, embedding=embedding)
+        face = recognition.find_face(
+            auth_res['user'], image=image, embedding=embedding)
         if isinstance(face, bool):
-            face = models.Face.save_pil(user=auth_res['user'], image=image, embedding=embedding)
+            face = models.Face.save_pil(
+                user=auth_res['user'], image=image, embedding=embedding)
         return JsonResponse(data=utils.base_response(response=dict(face_id=face.id)))
     except KeyError:
         return JsonResponse(data=utils.base_response(message='Embedding was not mentioned', ok=False))
@@ -106,13 +112,19 @@ def introduce(request, data: dict = None, file=None, auth_res=None):
 @authenticate_device
 def log(request, data: dict = None, file=None, auth_res=None):
     try:
-        face_id = data['face_id'] if not isinstance(data['face_id'], list) else data['face_id'][0]
+        face_id = data['face_id'] if not isinstance(
+            data['face_id'], list) else data['face_id'][0]
         face = models.Face.objects.get(id=face_id)
-        kind = data['kind'] if not isinstance(data['kind'], list) else data['kind'][0]
+        kind = data['kind'] if not isinstance(
+            data['kind'], list) else data['kind'][0]
         device = auth_res['device']
         image = Image.open(file).convert('RGB') if file is not None else None
-        models.Log.save_pil(face=face, device=device, kind=kind, image=image)
-        return JsonResponse(data=utils.base_response(ok=True, message='Logged successfully'))
+        log = models.Log.save_pil(
+            face=face, device=device, kind=kind, image=image)
+        return JsonResponse(data=utils.base_response(
+            ok=True, message='Logged successfully', response=dict(
+                in_count=log.device.inside_count(), name='Unknown' if not log.face.name else log.face.name)
+        ))
     except KeyError:
         return JsonResponse(
             data=utils.base_response(message='Both `face_id` and `kind` are expected to be specified', ok=False))

@@ -1,5 +1,6 @@
 from PIL import Image
 from django import shortcuts
+from django.contrib import auth
 from django.contrib.auth import login, authenticate
 from . import forms, recognition
 from . import utils
@@ -86,8 +87,10 @@ def fetch(request, data: dict = None, file=None, auth_res=None):
         data=utils.base_response(
             response=dict(faces=[
                 dict(embedding=face.embedding, face_id=face.id) for face in
-                models.Face.objects.filter(user=auth_res['user'])
-            ])
+                    models.Face.objects.filter(user=auth_res['user'])
+                ],
+                in_count=auth_res['device'].inside_count(),
+            )
         )
     )
 

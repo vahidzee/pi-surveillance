@@ -26,7 +26,6 @@ class FilterUserAdmin(admin.ModelAdmin):
 
 @admin.register(models.Device)
 class DeviceAdmin(FilterUserAdmin):
-    actions = None
     sortable_by = 'last_update'
     form = forms.DeviceForm
     list_display = ['id', 'name', 'last_update', 'inside_count']

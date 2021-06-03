@@ -30,6 +30,7 @@ class SmartCamera:
                 if match:
                     face_found = True
                     yield {'known': True, 'face_id': saved_id}
+                    break
             if not face_found:
                 byte_io = BytesIO()
                 Image.fromarray(self.output[top:bottom+1, left:right+1, ::1]).save(byte_io, 'png')

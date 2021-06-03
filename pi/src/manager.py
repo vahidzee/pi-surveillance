@@ -66,7 +66,7 @@ class Manager:
                 counter, name = req_result['response']['in_count'], req_result['response']['name']
                 self.lcd.lcd_clear()
                 self.lcd.lcd_display_string(f'{counter} ' + ('person' if counter == 1 else 'people') + ' inside')
-                self.lcd.lcd_display_string(f'welcome {name}', line=2)
+                self.lcd.lcd_display_string(('welcome' if enter else 'goodbye') + name, line=2)
 
     def loop(self):
         try:

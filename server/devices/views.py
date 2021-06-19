@@ -1,12 +1,11 @@
 from PIL import Image
-from django import shortcuts
-from django.contrib import auth
-from django.contrib.auth import login, authenticate
+from django.conf import settings
 from . import forms, recognition
 from . import utils
 from . import models
 from django.shortcuts import render, redirect
 from django.contrib import admin
+from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -87,8 +86,8 @@ def fetch(request, data: dict = None, file=None, auth_res=None):
         data=utils.base_response(
             response=dict(faces=[
                 dict(embedding=face.embedding, face_id=face.id) for face in
-                    models.Face.objects.filter(user=auth_res['user'])
-                ],
+                models.Face.objects.filter(user=auth_res['user'])
+            ],
                 in_count=auth_res['device'].inside_count(),
             )
         )
@@ -112,6 +111,15 @@ def introduce(request, data: dict = None, file=None, auth_res=None):
         return JsonResponse(data=utils.base_response(message='Embedding was not mentioned', ok=False))
 
 
+def mail_message(log):
+    device = f'{log.device.name if log.device.name else log.device.id}'
+    face = f'{log.face.name if log.face.name else log.face.id}'
+    kind = f'{"enter" if log.kind == "E" else "exit"}'
+    num_in = log.device.inside_count()
+    return f'Your device "{device}", saw "{face}" {kind}.\nThere are currently {num_in} people' \
+           f' inside this property.'
+
+
 @authenticate_device
 def log(request, data: dict = None, file=None, auth_res=None):
     try:
@@ -124,6 +132,12 @@ def log(request, data: dict = None, file=None, auth_res=None):
         image = Image.open(file).convert('RGB') if file is not None else None
         log = models.Log.save_pil(
             face=face, device=device, kind=kind, image=image)
+        if settings.GMAIL:
+            send_mail(subject='Surveillance Log',
+                      message=mail_message(log),
+                      from_email=settings.GMAIL,
+                      recipient_list=[device.user.email],
+                      fail_silently=True)
         return JsonResponse(data=utils.base_response(
             ok=True, message='Logged successfully', response=dict(
                 in_count=log.device.inside_count(), name='Unknown' if not log.face.name else log.face.name)

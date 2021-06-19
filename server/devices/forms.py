@@ -3,7 +3,7 @@ from PIL import Image
 from . import models, recognition
 from django import forms
 from django.db import models as django_models
-
+from django.contrib import auth
 from django.contrib.auth.forms import UserCreationForm as AuthUserCreationForm
 
 
@@ -36,6 +36,11 @@ class FaceForm(forms.ModelForm):
 
 
 class UserCreationForm(AuthUserCreationForm):
+    class Meta:
+        model = auth.get_user_model()
+        fields = ('email', 'username')
+        field_classes = {'username': auth.forms.UsernameField}
+
     def save(self, commit=True):
         user = super().save(commit=False)
         user.set_password(self.cleaned_data["password1"])
